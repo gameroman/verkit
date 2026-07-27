@@ -133,12 +133,12 @@ export function sort<T extends VersionInput>(
   versions: readonly T[],
   options: VersionOptions = {},
 ): T[] {
-  return versions.toSorted((left, right) => compareBuild(left, right, options))
+  return [...versions].sort((left, right) => compareBuild(left, right, options))
 }
 
 export function sortReversed<T extends VersionInput>(
   versions: readonly T[],
   options: VersionOptions = {},
 ): T[] {
-  return versions.toSorted((left, right) => compareBuild(right, left, options))
+  return [...versions].sort((left, right) => compareBuild(right, left, options))
 }
