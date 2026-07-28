@@ -57,6 +57,16 @@ describe('range parsing and satisfaction', () => {
     expect(isRangeSubset(range, '1.x')).toBe(true)
   })
 
+  it('fixes range options at parse time', () => {
+    const version = '1.0.0-rc.1'
+    const range = parseRange('1.x', { includePrerelease: true })
+
+    expect(range.options.includePrerelease).toBe(true)
+    expect(normalizeRange(range)).toBe('>=1.0.0-0 <2.0.0-0')
+    expect(satisfies(version, range)).toBe(true)
+    expect(findMaxSatisfying([version], range)).toBe(version)
+  })
+
   it('returns independent mutable SemVerRange objects', () => {
     const options: RangeOptions = {}
     const first = parseRange('^1.2.3', options)

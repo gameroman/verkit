@@ -84,6 +84,18 @@ Range APIs accept strings or mutable `SemVerRange` objects. They support
 comparators, unions, hyphens, wildcards, tilde, caret, loose parsing, and
 prereleases.
 
+Range options are fixed when a `SemVerRange` is created. APIs that receive a
+parsed range use its stored options and do not accept another options argument:
+
+```ts
+const prereleases = parseRange('1.x', { includePrerelease: true })
+
+satisfies('1.0.0-rc.1', prereleases) // true
+```
+
+To use different options, pass the original range string again or create
+another parsed range.
+
 ## API
 
 See the [API reference](https://npmx.dev/package-docs/verkit).
@@ -122,12 +134,16 @@ such as `clean`, `coerce`, `compare`, and `satisfies` are omitted.
 is `normalize`. Use `isValid` when you only need a boolean.
 
 Use options objects such as `{ loose: true }` and `{ identifier, identifierBase }`.
+Range options belong to the string-parsing step; parsed `SemVerRange` objects
+already contain them.
 
 ## Differences from node-semver
 
-verkit follows [node-semver] semantics with three user-visible differences:
+verkit follows [node-semver] semantics with four user-visible differences:
 
 - Array helpers never mutate their inputs.
+- Parsed `SemVerRange` objects retain their parse-time options. node-semver
+  helpers may reparse a `Range` from `raw` using call-site options.
 - verkit is ESM-only, with no CommonJS, CLI, or `NODE_DEBUG=semver` output.
 - Error text, stack traces, and supported runtimes may differ.
 

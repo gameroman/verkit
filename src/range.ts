@@ -6,7 +6,9 @@ import {
   testParsedRange,
   testRangeVersion,
   tryParseRange,
+  type ParseRangeInput,
   type RangeInput,
+  type SemVerRange,
 } from './internal/range.ts'
 import {
   compareParsed,
@@ -25,35 +27,65 @@ import type {
 export { parseRange, tryParseRange }
 export type { RangeInput, SemVerRange } from './internal/range.ts'
 
+type TryParseRangeInput = (
+  range: RangeInput,
+  options?: RangeOptions,
+) => SemVerRange | null
+
+type IsOutsideRangeInput = (
+  version: VersionInput,
+  range: RangeInput,
+  direction: RangeDirection,
+  options?: RangeOptions,
+) => boolean
+
+export function isValidRange(range: string, options?: RangeOptions): boolean
+export function isValidRange(range: RangeInput): boolean
 export function isValidRange(
   range: RangeInput,
   options: RangeOptions = {},
 ): boolean {
-  return tryParseRange(range, options) !== null
+  return (tryParseRange as TryParseRangeInput)(range, options) !== null
 }
 
+export function normalizeRange(
+  range: string,
+  options?: RangeOptions,
+): string | null
+export function normalizeRange(range: RangeInput): string | null
 export function normalizeRange(
   range: RangeInput,
   options: RangeOptions = {},
 ): string | null {
-  const parsed = tryParseRange(range, options)
+  const parsed = (tryParseRange as TryParseRangeInput)(range, options)
   return parsed ? parsed.normalized || '*' : null
 }
 
 export function satisfies(
   version: VersionInput,
+  range: string,
+  options?: RangeOptions,
+): boolean
+export function satisfies(version: VersionInput, range: RangeInput): boolean
+export function satisfies(
+  version: VersionInput,
   range: RangeInput,
   options: RangeOptions = {},
 ): boolean {
-  const parsed = tryParseRange(range, options)
+  const parsed = (tryParseRange as TryParseRangeInput)(range, options)
   return parsed ? testRangeVersion(parsed, version) : false
 }
 
 export function rangeToComparators(
+  range: string,
+  options?: RangeOptions,
+): string[][]
+export function rangeToComparators(range: RangeInput): string[][]
+export function rangeToComparators(
   range: RangeInput,
   options: RangeOptions = {},
 ): string[][] {
-  return parseRange(range, options).sets.map((set) =>
+  return (parseRange as ParseRangeInput)(range, options).sets.map((set) =>
     set
       .map((comparator) => comparator.value)
       .join(' ')
@@ -64,10 +96,19 @@ export function rangeToComparators(
 
 export function findMaxSatisfying<T extends VersionInput>(
   versions: readonly T[],
+  range: string,
+  options?: RangeOptions,
+): T | null
+export function findMaxSatisfying<T extends VersionInput>(
+  versions: readonly T[],
+  range: RangeInput,
+): T | null
+export function findMaxSatisfying<T extends VersionInput>(
+  versions: readonly T[],
   range: RangeInput,
   options: RangeOptions = {},
 ): T | null {
-  const parsedRange = tryParseRange(range, options)
+  const parsedRange = (tryParseRange as TryParseRangeInput)(range, options)
   if (!parsedRange) return null
   let maximum: T | null = null
   let maximumParsed: SemVer | null = null
@@ -84,10 +125,19 @@ export function findMaxSatisfying<T extends VersionInput>(
 
 export function findMinSatisfying<T extends VersionInput>(
   versions: readonly T[],
+  range: string,
+  options?: RangeOptions,
+): T | null
+export function findMinSatisfying<T extends VersionInput>(
+  versions: readonly T[],
+  range: RangeInput,
+): T | null
+export function findMinSatisfying<T extends VersionInput>(
+  versions: readonly T[],
   range: RangeInput,
   options: RangeOptions = {},
 ): T | null {
-  const parsedRange = tryParseRange(range, options)
+  const parsedRange = (tryParseRange as TryParseRangeInput)(range, options)
   if (!parsedRange) return null
   let minimum: T | null = null
   let minimumParsed: SemVer | null = null
@@ -122,10 +172,15 @@ function nextVersionAfter(version: SemVer): SemVer {
 }
 
 export function findMinimumForRange(
+  range: string,
+  options?: RangeOptions,
+): string | null
+export function findMinimumForRange(range: RangeInput): string | null
+export function findMinimumForRange(
   range: RangeInput,
   options: RangeOptions = {},
 ): string | null {
-  const parsedRange = parseRange(range, options)
+  const parsedRange = (parseRange as ParseRangeInput)(range, options)
   const zero = parse('0.0.0')
   if (testParsedRange(parsedRange, zero)) return formatComparableVersion(zero)
   const zeroPrerelease = parse('0.0.0-0')
@@ -189,6 +244,17 @@ function compareOpposite(
 
 export function isOutsideRange(
   version: VersionInput,
+  range: string,
+  direction: RangeDirection,
+  options?: RangeOptions,
+): boolean
+export function isOutsideRange(
+  version: VersionInput,
+  range: RangeInput,
+  direction: RangeDirection,
+): boolean
+export function isOutsideRange(
+  version: VersionInput,
   range: RangeInput,
   direction: RangeDirection,
   options: RangeOptions = {},
@@ -196,7 +262,7 @@ export function isOutsideRange(
   if (direction !== '>' && direction !== '<') {
     throw new TypeError('Must provide a direction of "<" or ">"')
   }
-  const parsedRange = parseRange(range, options)
+  const parsedRange = (parseRange as ParseRangeInput)(range, options)
   const parsedVersion = parse(version, parsedRange.options)
   if (testParsedRange(parsedRange, parsedVersion)) return false
 
@@ -238,27 +304,51 @@ export function isOutsideRange(
 
 export function isGreaterThanRange(
   version: VersionInput,
+  range: string,
+  options?: RangeOptions,
+): boolean
+export function isGreaterThanRange(
+  version: VersionInput,
+  range: RangeInput,
+): boolean
+export function isGreaterThanRange(
+  version: VersionInput,
   range: RangeInput,
   options: RangeOptions = {},
 ): boolean {
-  return isOutsideRange(version, range, '>', options)
+  return (isOutsideRange as IsOutsideRangeInput)(version, range, '>', options)
 }
 
+export function isLessThanRange(
+  version: VersionInput,
+  range: string,
+  options?: RangeOptions,
+): boolean
+export function isLessThanRange(
+  version: VersionInput,
+  range: RangeInput,
+): boolean
 export function isLessThanRange(
   version: VersionInput,
   range: RangeInput,
   options: RangeOptions = {},
 ): boolean {
-  return isOutsideRange(version, range, '<', options)
+  return (isOutsideRange as IsOutsideRangeInput)(version, range, '<', options)
 }
 
+export function rangesIntersect(
+  left: string,
+  right: string,
+  options?: RangeOptions,
+): boolean
+export function rangesIntersect(left: RangeInput, right: RangeInput): boolean
 export function rangesIntersect(
   left: RangeInput,
   right: RangeInput,
   options: RangeOptions = {},
 ): boolean {
-  const parsedLeft = parseRange(left, options)
-  const parsedRight = parseRange(right, options)
+  const parsedLeft = (parseRange as ParseRangeInput)(left, options)
+  const parsedRight = (parseRange as ParseRangeInput)(right, options)
   return parsedRangesIntersect(parsedLeft, parsedRight, {
     ...parsedLeft.options,
     ...parsedRight.options,
@@ -268,10 +358,19 @@ export function rangesIntersect(
 
 export function simplifyRange<T extends VersionInput>(
   versions: readonly T[],
+  range: string,
+  options?: RangeOptions,
+): string
+export function simplifyRange<T extends VersionInput>(
+  versions: readonly T[],
+  range: RangeInput,
+): string
+export function simplifyRange<T extends VersionInput>(
+  versions: readonly T[],
   range: RangeInput,
   options: RangeOptions = {},
 ): string {
-  const parsedRange = parseRange(range, options)
+  const parsedRange = (parseRange as ParseRangeInput)(range, options)
   const sorted = sort(versions, parsedRange.options)
   const sets: [T, T | null][] = []
   let first: T | null = null
@@ -476,13 +575,19 @@ function simpleRangeSubset(
 }
 
 export function isRangeSubset(
+  subset: string,
+  superset: string,
+  options?: RangeOptions,
+): boolean
+export function isRangeSubset(subset: RangeInput, superset: RangeInput): boolean
+export function isRangeSubset(
   subset: RangeInput,
   superset: RangeInput,
   options: RangeOptions = {},
 ): boolean {
   if (subset === superset) return true
-  const parsedSubset = parseRange(subset, options)
-  const parsedSuperset = parseRange(superset, options)
+  const parsedSubset = (parseRange as ParseRangeInput)(subset, options)
+  const parsedSuperset = (parseRange as ParseRangeInput)(superset, options)
   const effectiveOptions = {
     ...parsedSubset.options,
     ...parsedSuperset.options,

@@ -30,6 +30,11 @@ export interface SemVerRange {
 
 export type RangeInput = SemVerRange | string
 
+export type ParseRangeInput = (
+  range: RangeInput,
+  options?: RangeOptions,
+) => SemVerRange
+
 const BUILD_STRIP = new RegExp(BUILD, 'g')
 const BUILD_SAFE = safeRegex(BUILD)
 const STRICT_HYPHEN = safeRegex(
@@ -300,6 +305,8 @@ function parseSimpleRange(
   return [...unique.values()]
 }
 
+export function parseRange(range: string, options?: RangeOptions): SemVerRange
+export function parseRange(range: RangeInput): SemVerRange
 export function parseRange(
   range: RangeInput,
   options: RangeOptions = {},
@@ -336,11 +343,16 @@ export function parseRange(
 }
 
 export function tryParseRange(
+  range: string,
+  options?: RangeOptions,
+): SemVerRange | null
+export function tryParseRange(range: RangeInput): SemVerRange | null
+export function tryParseRange(
   range: RangeInput,
   options: RangeOptions = {},
 ): SemVerRange | null {
   try {
-    return parseRange(range, options)
+    return (parseRange as ParseRangeInput)(range, options)
   } catch {
     return null
   }
