@@ -32,6 +32,7 @@ export function isLessOrEqual(_, _, _) {}
 export function isLessThanRange(_, _, _) {}
 export function isNotEqual(_, _, _) {}
 export function isOutsideRange(_, _, _, _) {}
+export function isPrerelease(_, _) {}
 export function isRangeSubset(_, _, _) {}
 export function isValid(_, _) {}
 export function isValidRange(_, _) {}

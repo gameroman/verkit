@@ -86,6 +86,7 @@ export declare function isLessThanRange(_: VersionInput, _: RangeInput): boolean
 export declare function isNotEqual(_: VersionInput, _: VersionInput, _?: VersionOptions): boolean;
 export declare function isOutsideRange(_: VersionInput, _: string, _: RangeDirection, _?: RangeOptions): boolean;
 export declare function isOutsideRange(_: VersionInput, _: RangeInput, _: RangeDirection): boolean;
+export declare function isPrerelease(_: VersionInput, _?: VersionOptions): boolean | null;
 export declare function isRangeSubset(_: string, _: string, _?: RangeOptions): boolean;
 export declare function isRangeSubset(_: RangeInput, _: RangeInput): boolean;
 export declare function isValid(_: VersionInput, _?: VersionOptions): boolean;
